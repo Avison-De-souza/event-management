@@ -1,70 +1,226 @@
-# Getting Started with Create React App
+# Eventics
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A college event management portal. Students discover and register for campus events; faculty publish events, track sign-ups and export rosters.
 
-## Available Scripts
+Built with React and Supabase.
 
-In the project directory, you can run:
+## Table of contents
 
-### `npm start`
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Environment variables](#environment-variables)
+- [Database](#database)
+- [Project structure](#project-structure)
+- [Available scripts](#available-scripts)
+- [Deployment](#deployment)
+- [Security notes](#security-notes)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Students
+- Create an account and sign in
+- Browse upcoming events, with a featured next event
+- Search events and filter by category
+- See each event's registration status: open, closing soon, closed or ended
+- Register for an event; details are pre-filled from earlier registrations
+- View and cancel registrations
 
-### `npm test`
+### Faculty
+- Sign in to a separate faculty portal
+- Dashboard with totals for events, upcoming events, events open for registration and registrations
+- Publish events with title, category, poster, event date and registration deadline (deadline must not be after the event date)
+- Search events and see registration counts at a glance
+- View each event's roster, search it, and export it as CSV
+- Delete events (blocked while students are registered)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### General
+- Responsive layout for desktop and mobile
+- Toast notifications and confirmation dialogs instead of browser alerts
+- Keyboard-accessible dialogs, visible focus states and reduced-motion support
+- Session survives a page refresh
 
-### `npm run build`
+## Tech stack
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+| Area | Technology |
+| --- | --- |
+| Frontend | React (Create React App) |
+| Database | Supabase (PostgreSQL) |
+| Client library | `@supabase/supabase-js` |
+| Styling | Plain CSS design system in `src/index.css` |
+| Font | Manrope (Google Fonts) |
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Getting started
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Prerequisites
 
-### `npm run eject`
+- [Node.js](https://nodejs.org) 18 or newer
+- A free [Supabase](https://supabase.com) account
+- Git
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Installation
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Clone the repository and move into it:
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/YOUR-REPO.git
+   cd YOUR-REPO
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a Supabase project, open **SQL Editor**, and run the contents of `eventics_setup.sql`.
+4. Create a `.env` file in the project root (see below).
+5. Start the development server:
+   ```bash
+   npm start
+   ```
+   The app opens at http://localhost:3000.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### First sign-in
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The setup script creates one demo faculty account:
 
-## Learn More
+| Email | Password |
+| --- | --- |
+| `faculty@example.com` | `ChangeMe123` |
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Change this password straight away. Students create their own accounts from the sign-in page.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Environment variables
 
-### Code Splitting
+Create `.env` in the project root, next to `package.json`:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```
+REACT_APP_SUPABASE_URL=https://YOUR-PROJECT-ID.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=YOUR-PUBLISHABLE-KEY
+```
 
-### Analyzing the Bundle Size
+Find both values in Supabase under **Project Settings → API**. Restart `npm start` after editing `.env`. Do not commit this file, and never use the `service_role` key in the frontend.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+`src/supabaseClient.js`:
 
-### Making a Progressive Web App
+```js
+import { createClient } from '@supabase/supabase-js';
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+const url = process.env.REACT_APP_SUPABASE_URL;
+const key = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-### Advanced Configuration
+if (!url || !key) {
+  throw new Error('Missing Supabase settings. Check your .env file.');
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+export const supabase = createClient(url, key);
+```
 
-### Deployment
+## Database
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Three tables, created by `eventics_setup.sql`:
 
-### `npm run build` fails to minify
+**`events`**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | bigint | Primary key |
+| `title` | text | Required |
+| `description` | text | |
+| `category` | text | For example Technology, Cultural, Sports |
+| `event_date` | date | |
+| `deadline_date` | date | Must be on or before `event_date` |
+| `poster_url` | text | Falls back to a default image if empty or broken |
+| `venue`, `capacity` | text, integer | Optional |
+| `created_at` | timestamptz | |
+
+**`registrations`**
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | bigint | Primary key |
+| `event_id` | bigint | References `events(id)` |
+| `student_name`, `student_email`, `student_phone` | text | |
+| `password` | text | Only set on a student's sign-up row |
+| `created_at` | timestamptz | |
+
+A unique constraint on `(event_id, student_email)` prevents duplicate registrations.
+
+**`faculty`**: `id`, `name`, `email` (unique), `password`, `created_at`.
+
+The script also creates an `event_stats` view with registration counts and fill rate per event, plus ready-to-run report queries (popular events, daily sign-ups, closing deadlines, and more).
+
+### Known data-model limitation
+
+A student account is currently a `registrations` row that has a password, and sign-up inserts that row against event 1. Every new student therefore appears registered for event 1. Moving accounts into a separate `students` table, or into Supabase Auth, removes this (see [Roadmap](#roadmap)).
+
+## Project structure
+
+```
+.
+├── public/
+│   └── index.html
+├── src/
+│   ├── App.js                 Routes between login, student and faculty views
+│   ├── LoginPage.js           Sign in and sign up
+│   ├── StudentDashboard.js    Discover events, registrations
+│   ├── TeacherDashboard.js    Stats, event table, roster, publish
+│   ├── Ui.js                  Toasts, modal and confirm dialog
+│   ├── utils.js               Dates, registration status, CSV export
+│   ├── supabaseClient.js      Supabase connection
+│   ├── index.js               App entry point
+│   ├── index.css              Design system and all styles
+│   └── App.test.js            Smoke test
+├── eventics_setup.sql         Database setup for a new Supabase project
+├── .env                       Local settings (not committed)
+└── package.json
+```
+
+## Available scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm start` | Runs the app in development mode |
+| `npm test` | Runs the test suite |
+| `npm run build` | Creates a production build in `build/` |
+
+## Deployment
+
+The app builds to static files, so any static host works (Vercel, Netlify, GitHub Pages).
+
+For Vercel or Netlify:
+
+1. Import the GitHub repository.
+2. Set the build command to `npm run build` and the output directory to `build`.
+3. Add `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` in the host's environment variable settings.
+4. Deploy.
+
+## Security notes
+
+This project is suitable for learning and demos. Before using it with real student data, address the following:
+
+- **Passwords are stored in plain text** and checked in the browser. Move to Supabase Auth (`signUp` / `signInWithPassword`) and remove the password columns.
+- **Row Level Security is permissive.** The setup script lets the public anon key read and write, because the app does its own login. Replace these with per-user policies once Supabase Auth is in place. Example policies are in the script.
+- **Faculty actions are not enforced by the database.** Restrict event creation, deletion and roster access to faculty with policies.
+- The anon (publishable) key is meant to be public. Never expose the `service_role` key.
+
+## Roadmap
+
+- [ ] Supabase Auth for students and faculty
+- [ ] Separate `students` table and per-user Row Level Security
+- [ ] Event capacity limits and waitlist
+- [ ] Edit existing events
+- [ ] Email confirmation after registration
+- [ ] Event venue and time shown in the UI
+
+## Contributing
+
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push the branch: `git push origin feature/your-feature`
+5. Open a pull request
+
+## License
+
+Add a license of your choice (for example MIT) in a `LICENSE` file. Until one is added, all rights are reserved by the author.
