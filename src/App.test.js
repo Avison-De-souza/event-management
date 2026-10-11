@@ -1,8 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+// Avoid hitting the real database during tests.
+jest.mock('./supabaseClient', () => ({ supabase: {} }));
+
+test('shows the sign-in screen when logged out', () => {
+  sessionStorage.clear();
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
 });
